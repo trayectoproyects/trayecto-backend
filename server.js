@@ -70,6 +70,8 @@ app.post('/api/contacto', async (req, res) => {
     const body = req.body || {};
     const nombre = String(body.nombre || '').trim().slice(0, 120);
     const marca = String(body.marca || '').trim().slice(0, 120);
+    const celular = body.celular ? String(body.celular).trim().slice(0, 40) : null;
+    const instagram = body.instagram ? String(body.instagram).trim().slice(0, 60) : null;
     const email = body.email ? String(body.email).trim().slice(0, 200) : null;
     const comentario = body.comentario ? String(body.comentario).trim().slice(0, 2000) : null;
     const fecha = body.fecha ? String(body.fecha).trim() : null; // "YYYY-MM-DD"
@@ -104,6 +106,8 @@ app.post('/api/contacto', async (req, res) => {
     const lead = guardarLead({
       nombre,
       marca,
+      celular,
+      instagram,
       email,
       servicios,
       comentario,
@@ -118,7 +122,7 @@ app.post('/api/contacto', async (req, res) => {
 
     // 3) Mandamos los emails (interno + confirmacion). Si falla, no rompe la respuesta.
     try {
-      await notificarNuevoLead({ nombre, marca, email, servicios, comentario, fecha, hora, meetLink });
+      await notificarNuevoLead({ nombre, marca, celular, instagram, email, servicios, comentario, fecha, hora, meetLink });
     } catch (err) {
       console.error('No se pudo enviar el email:', err.message);
     }

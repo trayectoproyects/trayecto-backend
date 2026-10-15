@@ -100,7 +100,8 @@
   .lead-foot{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
   .lead-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;text-decoration:none;}
   .lead-link.meet{background:var(--noche);color:#fff;}
-  .lead-link.wa{background:rgba(92,141,104,.14);color:var(--ruta-verde);}
+  .lead-link.tel{background:rgba(92,141,104,.14);color:var(--ruta-verde);}
+  .lead-link.ig{background:var(--naranja-soft);color:var(--naranja-ink);}
   .lead-link.mail{background:var(--line-soft);color:var(--ink-soft);}
   .lead-schedule{font-size:13px;font-weight:700;color:var(--noche);background:rgba(31,58,68,.08);padding:8px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;}
 
@@ -150,7 +151,7 @@
       </div>
 
       <div class="toolbar">
-        <input type="text" id="searchInput" placeholder="Buscar por nombre, marca o email…">
+        <input type="text" id="searchInput" placeholder="Buscar por nombre, marca, celular, Instagram o email…">
       </div>
 
       <div id="emptyState" class="empty-state" style="display:none;">
@@ -215,10 +216,25 @@
     statMeet.textContent = leads.filter(l => l.meet_link).length;
   }
 
+  function telUrl(celular){
+    if(!celular) return null;
+    const limpio = celular.replace(/[^\d+]/g, '');
+    return limpio ? `tel:${limpio}` : null;
+  }
+  function instagramUrl(handle){
+    if(!handle) return null;
+    let h = handle.trim();
+    if(/^https?:\/\//i.test(h)) return h;
+    h = h.replace(/^@/, '');
+    return h ? `https://instagram.com/${encodeURIComponent(h)}` : null;
+  }
+
   function leadCardHtml(lead){
     const esNuevo = lead.id > sessionStartSeenId;
     const servicios = Array.isArray(lead.servicios) ? lead.servicios : [];
     const fechaPedida = fmtFechaPedida(lead.fecha, lead.hora);
+    const telHref = telUrl(lead.celular);
+    const igHref = instagramUrl(lead.instagram);
     return `
       <div class="lead-card${esNuevo ? ' is-new' : ''}" data-id="${lead.id}">
         <div class="lead-head">
@@ -229,11 +245,16 @@
           <div class="lead-when">${fmtFechaHora(lead.creado_en)}</div>
         </div>
         ${servicios.length ? `<div class="lead-tags">${servicios.map(s => `<span class="lead-tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+        ${lead.celular ? `<div class="lead-row"><b>Celular</b><span>${escapeHtml(lead.celular)}</span></div>` : ''}
+        ${lead.instagram ? `<div class="lead-row"><b>Instagram</b><span>${escapeHtml(lead.instagram)}</span></div>` : ''}
         ${lead.email ? `<div class="lead-row"><b>Email</b><span>${escapeHtml(lead.email)}</span></div>` : ''}
+        ${!lead.celular && !lead.instagram && !lead.email ? `<div class="lead-row"><b>Contacto</b><span>No dejó ningún dato de contacto</span></div>` : ''}
         ${lead.comentario ? `<div class="lead-comment">${escapeHtml(lead.comentario)}</div>` : ''}
         <div class="lead-foot">
           ${fechaPedida ? `<span class="lead-schedule">🗓️ Pidió llamada: ${escapeHtml(fechaPedida)}</span>` : ''}
           ${lead.meet_link ? `<a class="lead-link meet" href="${escapeHtml(lead.meet_link)}" target="_blank" rel="noopener noreferrer">🎥 Abrir Meet</a>` : ''}
+          ${telHref ? `<a class="lead-link tel" href="${escapeHtml(telHref)}">📱 Llamar</a>` : ''}
+          ${igHref ? `<a class="lead-link ig" href="${escapeHtml(igHref)}" target="_blank" rel="noopener noreferrer">📷 Ver Instagram</a>` : ''}
           ${lead.email ? `<a class="lead-link mail" href="mailto:${escapeHtml(lead.email)}">✉️ Responder por email</a>` : ''}
         </div>
       </div>`;
@@ -244,7 +265,9 @@
     const filtrados = !q ? leads : leads.filter(l =>
       (l.nombre || '').toLowerCase().includes(q) ||
       (l.marca || '').toLowerCase().includes(q) ||
-      (l.email || '').toLowerCase().includes(q)
+      (l.email || '').toLowerCase().includes(q) ||
+      (l.celular || '').toLowerCase().includes(q) ||
+      (l.instagram || '').toLowerCase().includes(q)
     );
     emptyState.style.display = leads.length === 0 ? 'block' : 'none';
     leadList.innerHTML = filtrados.map(leadCardHtml).join('');

@@ -14,7 +14,7 @@ function getTransport() {
   });
 }
 
-async function notificarNuevoLead({ nombre, marca, email, servicios, comentario, fecha, hora, meetLink }) {
+async function notificarNuevoLead({ nombre, marca, celular, instagram, email, servicios, comentario, fecha, hora, meetLink }) {
   if (!emailConfigurado()) {
     console.warn('GMAIL_USER / GMAIL_APP_PASSWORD no estan configurados: no se mando ningun email. Revisa el .env');
     return;
@@ -31,6 +31,8 @@ async function notificarNuevoLead({ nombre, marca, email, servicios, comentario,
     text: [
       `Nombre: ${nombre}`,
       `Marca: ${marca}`,
+      `Celular: ${celular || '—'}`,
+      `Instagram: ${instagram || '—'}`,
       `Email: ${email || '—'}`,
       `Servicios de interes: ${listaServicios || '—'}`,
       `Comentario: ${comentario || '—'}`,
