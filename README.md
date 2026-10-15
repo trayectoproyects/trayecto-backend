@@ -217,3 +217,39 @@ curl -H "x-admin-token: EL_ADMIN_TOKEN_DE_TU_.ENV" https://tu-backend.onrender.c
 ```
 
 Te devuelve un listado en JSON con todos los contactos recibidos.
+
+---
+
+## Parte E — Que los contactos no se pierdan nunca (Postgres gratis)
+
+**Importante**: en el plan free de Render, el archivo donde se guardan los
+contactos (`leads.json`) se borra cada vez que el servidor se reinicia o se
+redespliega — incluso cada vez que el servicio "se duerme" por inactividad
+y se despierta con la próxima visita. El email de aviso (Parte B.1) ya queda
+para siempre en tu Gmail, pero si además querés que el panel `/admin`
+mantenga el historial completo sin reiniciarse nunca, conectalo a una base
+de datos real y gratuita.
+
+1. Creá una cuenta gratis en https://supabase.com (podés entrar con GitHub).
+2. "New Project" → ponele un nombre (ej. "trayecto") y una contraseña para
+   la base (guardala, la vas a necesitar).
+3. Una vez creado, andá a **Project Settings** (ícono de engranaje) →
+   **Database** → buscá **Connection string** → pestaña **URI**. Copiá esa
+   cadena, va a tener la forma:
+   ```
+   postgresql://postgres:[TU-PASSWORD]@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   ```
+   Reemplazá `[TU-PASSWORD]` por la contraseña que elegiste en el paso 2.
+4. En Render, andá a tu servicio `trayecto-backend` → **Environment** →
+   agregá una variable nueva:
+   ```
+   DATABASE_URL=postgresql://postgres:tu-password@db.xxxxxxxxxxxx.supabase.co:5432/postgres
+   ```
+5. Guardá. Render reinstala las dependencias (ahora incluye `pg`, el cliente
+   de Postgres) y redespliega solo. La primera vez que llegue un contacto,
+   el backend crea la tabla `leads` sola en tu base — no hace falta tocar
+   nada en Supabase.
+
+A partir de ahí, el panel `/admin` nunca más pierde el historial, pase lo
+que pase con el servidor. Si en algún momento querés volver a ver los datos
+en crudo desde Supabase, podés entrar a **Table Editor** → tabla `leads`.

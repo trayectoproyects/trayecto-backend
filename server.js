@@ -102,7 +102,7 @@ app.post('/api/contacto', async (req, res) => {
     }
 
     // 2) Guardamos el lead si o si, haya salido bien o mal lo de arriba.
-    const lead = guardarLead({
+    const lead = await guardarLead({
       nombre,
       marca,
       celular,
@@ -136,12 +136,17 @@ app.post('/api/contacto', async (req, res) => {
 // Lista de contactos recibidos, en JSON crudo: GET /api/leads con el header
 // x-admin-token (o ?token=... por query) igual al ADMIN_TOKEN del .env.
 // El panel visual que de verdad vas a usar es /admin (ver public/admin.html).
-app.get('/api/leads', (req, res) => {
+app.get('/api/leads', async (req, res) => {
   const token = req.headers['x-admin-token'] || req.query.token;
   if (!tokenValido(token)) {
     return res.status(401).json({ ok: false, error: 'No autorizado.' });
   }
-  res.json({ ok: true, leads: listarLeads() });
+  try {
+    res.json({ ok: true, leads: await listarLeads() });
+  } catch (err) {
+    console.error('No se pudieron leer los contactos:', err.message);
+    res.status(500).json({ ok: false, error: 'Error interno del servidor.' });
+  }
 });
 
 app.get('/', (req, res) => {
