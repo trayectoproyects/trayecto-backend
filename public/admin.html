@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Panel — Trayecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400..800&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --crema: #F6F1E9;
+    --tinta: #1B1A17;
+    --tinta-soft: #3C3832;
+    --piedra: #5E564D;
+    --noche: #1F3A44;
+    --naranja: #E4572E;
+    --naranja-deep: #C8431E;
+    --naranja-ink: #B34422;
+    --naranja-bright: #EB8162;
+    --naranja-soft: #F3D5C7;
+    --ruta-verde: #5C8D68;
+    --ink: var(--tinta);
+    --ink-soft: var(--tinta-soft);
+    --ink-faint: var(--piedra);
+    --card: #FFFFFF;
+    --line: rgba(27,26,23,0.10);
+    --line-soft: rgba(27,26,23,0.06);
+    --sh-xs: 0 1px 2px rgba(27,26,23,0.06);
+    --sh-sm: 0 6px 16px -6px rgba(27,26,23,0.14);
+    --sh-md: 0 18px 40px -12px rgba(27,26,23,0.22);
+    --sh-lg: 0 36px 72px -16px rgba(27,26,23,0.30);
+    --radius-lg: 28px;
+    --radius-md: 20px;
+    --radius-sm: 12px;
+    --font-display: 'Bricolage Grotesque', 'Manrope', sans-serif;
+    --font-body: 'Manrope', -apple-system, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--crema);color:var(--ink);font-family:var(--font-body);-webkit-font-smoothing:antialiased;}
+  h1,h2,h3{font-family:var(--font-display);margin:0;}
+  .wrap{max-width:980px;margin:0 auto;padding:0 24px;}
+
+  /* ---------- LOGIN ---------- */
+  #loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;}
+  .login-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);box-shadow:var(--sh-lg);padding:40px 36px;width:100%;max-width:380px;text-align:center;}
+  .login-logo{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--naranja),var(--naranja-deep));display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:#fff;font-family:var(--font-display);font-weight:800;font-size:18px;}
+  .login-card h1{font-size:22px;margin-bottom:6px;}
+  .login-card p{color:var(--ink-faint);font-size:14px;margin:0 0 22px;}
+  .login-card input{width:100%;padding:13px 14px;border-radius:var(--radius-sm);border:1.5px solid var(--line);background:var(--crema);font-size:14.5px;font-family:var(--font-body);color:var(--ink);outline:none;transition:border-color .2s, box-shadow .2s;}
+  .login-card input:focus{border-color:var(--naranja);box-shadow:0 0 0 4px var(--naranja-soft);}
+  .login-card button{width:100%;margin-top:14px;padding:13px;border:none;border-radius:999px;background:var(--naranja);color:#fff;font-family:var(--font-body);font-weight:700;font-size:14.5px;cursor:pointer;transition:background .2s, transform .2s;}
+  .login-card button:hover{background:var(--naranja-ink);transform:translateY(-1px);}
+  .login-error{color:var(--naranja-ink);font-size:13px;margin-top:12px;display:none;}
+
+  /* ---------- SHELL ---------- */
+  #appScreen{display:none;min-height:100vh;}
+  header.topbar{position:sticky;top:0;z-index:5;background:rgba(246,241,233,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);}
+  .topbar-inner{max-width:980px;margin:0 auto;padding:18px 24px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .dot{width:30px;height:30px;border-radius:50%;background:linear-gradient(135deg,var(--naranja),var(--naranja-deep));}
+  .brand h1{font-size:18px;}
+  .brand span{display:block;font-size:11px;color:var(--ink-faint);font-weight:600;letter-spacing:.04em;text-transform:uppercase;}
+  .topbar-actions{display:flex;align-items:center;gap:10px;}
+  .status-pill{display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--ink-soft);background:var(--card);border:1px solid var(--line);border-radius:999px;padding:7px 13px;}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:#bbb;transition:background .25s;}
+  .status-dot.live{background:var(--ruta-verde);box-shadow:0 0 0 3px rgba(92,141,104,.25);}
+  .status-dot.off{background:var(--naranja-ink);}
+  .btn-ghost{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:9px 16px;font-size:13px;font-weight:700;color:var(--ink);cursor:pointer;font-family:var(--font-body);transition:background .2s;}
+  .btn-ghost:hover{background:var(--naranja-soft);}
+
+  main{padding:34px 0 80px;}
+  .summary-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px;}
+  .summary-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-md);padding:18px 20px;box-shadow:var(--sh-xs);}
+  .summary-card .num{font-family:var(--font-display);font-size:28px;font-weight:700;}
+  .summary-card .lbl{font-size:12.5px;color:var(--ink-faint);font-weight:600;margin-top:2px;}
+
+  .toolbar{display:flex;gap:10px;align-items:center;margin-bottom:18px;flex-wrap:wrap;}
+  .toolbar input{flex:1;min-width:200px;padding:11px 15px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);font-size:14px;font-family:var(--font-body);outline:none;}
+  .toolbar input:focus{border-color:var(--naranja);box-shadow:0 0 0 4px var(--naranja-soft);}
+
+  .empty-state{text-align:center;padding:70px 20px;color:var(--ink-faint);}
+  .empty-state .big{font-size:40px;margin-bottom:10px;}
+
+  .lead-list{display:flex;flex-direction:column;gap:14px;}
+  .lead-card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-md);padding:22px 24px;box-shadow:var(--sh-xs);position:relative;transition:box-shadow .25s, transform .25s;}
+  .lead-card.is-new{animation:popIn .5s ease;box-shadow:var(--sh-md);border-color:rgba(228,87,46,.4);}
+  @keyframes popIn{0%{transform:scale(.97);opacity:0;}100%{transform:scale(1);opacity:1;}}
+  .lead-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-bottom:10px;}
+  .lead-who h3{font-size:17px;}
+  .lead-who .marca{font-size:13.5px;color:var(--naranja-ink);font-weight:700;}
+  .lead-badge-new{background:var(--naranja);color:#fff;font-size:10.5px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;padding:4px 9px;border-radius:999px;margin-left:8px;vertical-align:middle;}
+  .lead-when{font-size:12.5px;color:var(--ink-faint);white-space:nowrap;}
+  .lead-tags{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0;}
+  .lead-tag{background:var(--naranja-soft);color:var(--naranja-ink);font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;}
+  .lead-row{display:flex;gap:8px;font-size:13.5px;color:var(--ink-soft);margin:6px 0;}
+  .lead-row b{color:var(--ink);font-weight:700;min-width:62px;flex-shrink:0;}
+  .lead-comment{background:var(--crema);border-radius:var(--radius-sm);padding:12px 14px;font-size:13.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5;white-space:pre-wrap;}
+  .lead-foot{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+  .lead-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;text-decoration:none;}
+  .lead-link.meet{background:var(--noche);color:#fff;}
+  .lead-link.wa{background:rgba(92,141,104,.14);color:var(--ruta-verde);}
+  .lead-link.mail{background:var(--line-soft);color:var(--ink-soft);}
+  .lead-schedule{font-size:13px;font-weight:700;color:var(--noche);background:rgba(31,58,68,.08);padding:8px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;}
+
+  @media (max-width:680px){
+    .summary-row{grid-template-columns:1fr 1fr;}
+    .summary-row .summary-card:last-child{grid-column:1/-1;}
+    .lead-head{flex-direction:column;}
+  }
+</style>
+</head>
+<body>
+
+<!-- ============ LOGIN ============ -->
+<div id="loginScreen">
+  <div class="login-card">
+    <div class="login-logo">T</div>
+    <h1>Panel de Trayecto</h1>
+    <p>Ingresá la clave de administrador para ver los contactos que llegan desde la web.</p>
+    <input type="password" id="tokenInput" placeholder="Clave de administrador" autocomplete="off">
+    <button id="loginBtn" type="button">Entrar</button>
+    <div class="login-error" id="loginError">Clave incorrecta. Probá de nuevo.</div>
+  </div>
+</div>
+
+<!-- ============ APP ============ -->
+<div id="appScreen">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <div class="dot"></div>
+        <div><h1>Panel de contactos</h1><span>trayecto</span></div>
+      </div>
+      <div class="topbar-actions">
+        <span class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusTxt">Conectando…</span></span>
+        <button class="btn-ghost" id="refreshBtn">Actualizar</button>
+        <button class="btn-ghost" id="logoutBtn">Salir</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="wrap">
+      <div class="summary-row">
+        <div class="summary-card"><div class="num" id="statTotal">0</div><div class="lbl">Contactos totales</div></div>
+        <div class="summary-card"><div class="num" id="statHoy">0</div><div class="lbl">Hoy</div></div>
+        <div class="summary-card"><div class="num" id="statMeet">0</div><div class="lbl">Con Meet agendado</div></div>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" id="searchInput" placeholder="Buscar por nombre, marca o email…">
+      </div>
+
+      <div id="emptyState" class="empty-state" style="display:none;">
+        <div class="big">📭</div>
+        <div>Todavía no llegó ningún contacto desde la web.</div>
+      </div>
+
+      <div class="lead-list" id="leadList"></div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+  const STORAGE_TOKEN = 'trayecto_admin_token';
+  const STORAGE_LAST_SEEN = 'trayecto_admin_last_seen_id';
+
+  const loginScreen = document.getElementById('loginScreen');
+  const appScreen = document.getElementById('appScreen');
+  const tokenInput = document.getElementById('tokenInput');
+  const loginBtn = document.getElementById('loginBtn');
+  const loginError = document.getElementById('loginError');
+  const leadList = document.getElementById('leadList');
+  const emptyState = document.getElementById('emptyState');
+  const searchInput = document.getElementById('searchInput');
+  const statusDot = document.getElementById('statusDot');
+  const statusTxt = document.getElementById('statusTxt');
+  const statTotal = document.getElementById('statTotal');
+  const statHoy = document.getElementById('statHoy');
+  const statMeet = document.getElementById('statMeet');
+
+  let leads = [];
+  let lastSeenId = Number(localStorage.getItem(STORAGE_LAST_SEEN) || 0);
+  let sessionStartSeenId = lastSeenId; // snapshot: todo lo que llegue con id mayor a esto se marca "nuevo" en esta sesión
+  let eventSource = null;
+
+  function getToken(){ return localStorage.getItem(STORAGE_TOKEN) || ''; }
+
+  function fmtFechaHora(iso){
+    try{
+      return new Date(iso).toLocaleString('es-AR', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+    }catch{ return iso; }
+  }
+  function fmtFechaPedida(fecha, hora){
+    if(!fecha) return null;
+    try{
+      const d = new Date(fecha + 'T00:00:00').toLocaleDateString('es-AR', { day:'numeric', month:'long', year:'numeric' });
+      return hora ? `${d} a las ${hora}hs` : d;
+    }catch{ return fecha; }
+  }
+  function esHoy(iso){
+    const d = new Date(iso), n = new Date();
+    return d.getFullYear()===n.getFullYear() && d.getMonth()===n.getMonth() && d.getDate()===n.getDate();
+  }
+  function escapeHtml(s){
+    return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function renderStats(){
+    statTotal.textContent = leads.length;
+    statHoy.textContent = leads.filter(l => esHoy(l.creado_en)).length;
+    statMeet.textContent = leads.filter(l => l.meet_link).length;
+  }
+
+  function leadCardHtml(lead){
+    const esNuevo = lead.id > sessionStartSeenId;
+    const servicios = Array.isArray(lead.servicios) ? lead.servicios : [];
+    const fechaPedida = fmtFechaPedida(lead.fecha, lead.hora);
+    return `
+      <div class="lead-card${esNuevo ? ' is-new' : ''}" data-id="${lead.id}">
+        <div class="lead-head">
+          <div class="lead-who">
+            <h3>${escapeHtml(lead.nombre)}${esNuevo ? '<span class="lead-badge-new">Nuevo</span>' : ''}</h3>
+            <div class="marca">${escapeHtml(lead.marca)}</div>
+          </div>
+          <div class="lead-when">${fmtFechaHora(lead.creado_en)}</div>
+        </div>
+        ${servicios.length ? `<div class="lead-tags">${servicios.map(s => `<span class="lead-tag">${escapeHtml(s)}</span>`).join('')}</div>` : ''}
+        ${lead.email ? `<div class="lead-row"><b>Email</b><span>${escapeHtml(lead.email)}</span></div>` : ''}
+        ${lead.comentario ? `<div class="lead-comment">${escapeHtml(lead.comentario)}</div>` : ''}
+        <div class="lead-foot">
+          ${fechaPedida ? `<span class="lead-schedule">🗓️ Pidió llamada: ${escapeHtml(fechaPedida)}</span>` : ''}
+          ${lead.meet_link ? `<a class="lead-link meet" href="${escapeHtml(lead.meet_link)}" target="_blank" rel="noopener noreferrer">🎥 Abrir Meet</a>` : ''}
+          ${lead.email ? `<a class="lead-link mail" href="mailto:${escapeHtml(lead.email)}">✉️ Responder por email</a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function renderList(){
+    const q = searchInput.value.trim().toLowerCase();
+    const filtrados = !q ? leads : leads.filter(l =>
+      (l.nombre || '').toLowerCase().includes(q) ||
+      (l.marca || '').toLowerCase().includes(q) ||
+      (l.email || '').toLowerCase().includes(q)
+    );
+    emptyState.style.display = leads.length === 0 ? 'block' : 'none';
+    leadList.innerHTML = filtrados.map(leadCardHtml).join('');
+    renderStats();
+  }
+
+  function setStatus(state){
+    // state: 'live' | 'connecting' | 'off'
+    statusDot.className = 'status-dot' + (state === 'live' ? ' live' : state === 'off' ? ' off' : '');
+    statusTxt.textContent = state === 'live' ? 'En vivo' : state === 'off' ? 'Desconectado' : 'Conectando…';
+  }
+
+  function pedirPermisoNotificaciones(){
+    if('Notification' in window && Notification.permission === 'default'){
+      Notification.requestPermission();
+    }
+  }
+
+  function sonarAviso(){
+    try{
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'sine'; o.frequency.value = 760;
+      g.gain.setValueAtTime(0.0001, ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.18, ctx.currentTime + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.4);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + 0.42);
+    }catch(e){ /* el navegador puede bloquear audio sin interacción previa; no pasa nada si falla */ }
+  }
+
+  function notificarNuevo(lead){
+    sonarAviso();
+    if('Notification' in window && Notification.permission === 'granted'){
+      const n = new Notification(`Nuevo contacto: ${lead.marca}`, {
+        body: `${lead.nombre}${lead.fecha ? ' — quiere llamada el ' + fmtFechaPedida(lead.fecha, lead.hora) : ''}`,
+        tag: 'trayecto-lead-' + lead.id,
+      });
+      n.onclick = () => { window.focus(); n.close(); };
+    }
+  }
+
+  function marcarComoVisto(){
+    const maxId = leads.reduce((m, l) => Math.max(m, l.id), lastSeenId);
+    lastSeenId = maxId;
+    localStorage.setItem(STORAGE_LAST_SEEN, String(maxId));
+  }
+
+  async function cargarLeads(){
+    const resp = await fetch('/api/leads', { headers: { 'x-admin-token': getToken() } });
+    if(resp.status === 401) throw new Error('unauthorized');
+    const data = await resp.json();
+    leads = (data.leads || []).slice().sort((a,b) => b.id - a.id);
+    // Primera vez que este navegador ve el panel: no marcamos nada viejo como "nuevo".
+    if(lastSeenId === 0 && leads.length){
+      lastSeenId = leads[0].id;
+      sessionStartSeenId = lastSeenId;
+      localStorage.setItem(STORAGE_LAST_SEEN, String(lastSeenId));
+    }
+    renderList();
+  }
+
+  function conectarEnVivo(){
+    if(eventSource) eventSource.close();
+    setStatus('connecting');
+    eventSource = new EventSource(`/api/leads/stream?token=${encodeURIComponent(getToken())}`);
+    eventSource.onopen = () => setStatus('live');
+    eventSource.onerror = () => setStatus('off');
+    eventSource.onmessage = (ev) => {
+      try{
+        const lead = JSON.parse(ev.data);
+        if(!leads.some(l => l.id === lead.id)){
+          leads.unshift(lead);
+          renderList();
+          notificarNuevo(lead);
+        }
+      }catch(e){ console.warn('No se pudo procesar el evento en vivo', e); }
+    };
+  }
+
+  async function entrarConToken(token){
+    localStorage.setItem(STORAGE_TOKEN, token);
+    try{
+      await cargarLeads();
+    }catch(err){
+      localStorage.removeItem(STORAGE_TOKEN);
+      throw err;
+    }
+    loginScreen.style.display = 'none';
+    appScreen.style.display = 'block';
+    pedirPermisoNotificaciones();
+    conectarEnVivo();
+  }
+
+  loginBtn.addEventListener('click', async () => {
+    const token = tokenInput.value.trim();
+    if(!token) return;
+    loginError.style.display = 'none';
+    loginBtn.textContent = 'Entrando…';
+    try{
+      await entrarConToken(token);
+    }catch(err){
+      loginError.style.display = 'block';
+    }
+    loginBtn.textContent = 'Entrar';
+  });
+  tokenInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') loginBtn.click(); });
+
+  document.getElementById('refreshBtn').addEventListener('click', () => cargarLeads());
+  document.getElementById('logoutBtn').addEventListener('click', () => {
+    localStorage.removeItem(STORAGE_TOKEN);
+    if(eventSource) eventSource.close();
+    appScreen.style.display = 'none';
+    loginScreen.style.display = 'flex';
+    tokenInput.value = '';
+  });
+  searchInput.addEventListener('input', renderList);
+  window.addEventListener('beforeunload', marcarComoVisto);
+  document.addEventListener('visibilitychange', () => { if(document.hidden) marcarComoVisto(); });
+
+  // Si ya había una sesión guardada en este navegador, entra directo.
+  const tokenGuardado = getToken();
+  if(tokenGuardado){
+    entrarConToken(tokenGuardado).catch(() => {
+      loginScreen.style.display = 'flex';
+      appScreen.style.display = 'none';
+    });
+  }
+})();
+</script>
+</body>
+</html>
