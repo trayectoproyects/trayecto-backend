@@ -1,31 +1,49 @@
-const nodemailer = require('nodemailer');
+// Mandamos los emails con la API HTTP de Brevo (brevo.com), no por SMTP.
+//
+// Por qué: en el plan gratis, Render bloquea las conexiones salientes por los
+// puertos que usa el email tradicional (SMTP: 25/465/587). Por eso Gmail por
+// SMTP (como lo hacíamos antes, con nodemailer) se queda esperando una
+// respuesta que nunca llega y termina en "Connection timeout" — no importa
+// que el usuario y la contraseña de aplicación estén bien configurados.
+// Brevo manda el email como un pedido HTTPS normal (como cualquier llamada a
+// una API), así que no choca con ese bloqueo. Ver README -> Parte B.1.
 
 function emailConfigurado() {
-  return Boolean(process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD);
+  return Boolean(process.env.BREVO_API_KEY && process.env.GMAIL_USER);
 }
 
-function getTransport() {
-  return nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: process.env.GMAIL_USER,
-      pass: process.env.GMAIL_APP_PASSWORD,
+async function enviarEmail({ to, subject, text }) {
+  const resp = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: {
+      'api-key': process.env.BREVO_API_KEY,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
     },
+    body: JSON.stringify({
+      sender: { email: process.env.GMAIL_USER, name: 'Trayecto' },
+      to: [{ email: to }],
+      subject,
+      textContent: text,
+    }),
   });
+
+  if (!resp.ok) {
+    const detalle = await resp.text().catch(() => '');
+    throw new Error(`Brevo respondió ${resp.status}: ${detalle.slice(0, 300)}`);
+  }
 }
 
 async function notificarNuevoLead({ nombre, marca, celular, instagram, email, servicios, comentario, fecha, hora, meetLink }) {
   if (!emailConfigurado()) {
-    console.warn('GMAIL_USER / GMAIL_APP_PASSWORD no estan configurados: no se mando ningun email. Revisa el .env');
+    console.warn('BREVO_API_KEY / GMAIL_USER no estan configurados: no se mando ningun email. Revisa el README -> Parte B.1.');
     return;
   }
 
-  const transport = getTransport();
   const listaServicios = Array.isArray(servicios) ? servicios.join(', ') : (servicios || '—');
 
   // 1) Aviso interno para Trayecto
-  await transport.sendMail({
-    from: `"Web Trayecto" <${process.env.GMAIL_USER}>`,
+  await enviarEmail({
     to: process.env.NOTIFY_EMAIL || process.env.GMAIL_USER,
     subject: `Nuevo contacto: ${marca} (${nombre})`,
     text: [
@@ -46,8 +64,7 @@ async function notificarNuevoLead({ nombre, marca, celular, instagram, email, se
   // 2) Confirmacion para quien escribio, solo si dejo su email
   if (email) {
     const tieneFecha = Boolean(fecha);
-    await transport.sendMail({
-      from: `"Trayecto" <${process.env.GMAIL_USER}>`,
+    await enviarEmail({
       to: email,
       subject: tieneFecha ? 'Tu llamada con Trayecto esta agendada' : 'Recibimos tu mensaje — Trayecto',
       text: tieneFecha
