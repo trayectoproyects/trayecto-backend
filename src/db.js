@@ -55,6 +55,19 @@ function getPool() {
       // Necesario para conectarse a bases como Supabase/Render Postgres desde
       // afuera sin tener que configurar el certificado de la autoridad.
       ssl: { rejectUnauthorized: false },
+      // Sin esto, si la conexión no responde, el pedido del formulario se
+      // queda esperando para siempre (y la persona ve "Enviando..." trabado).
+      // Con esto, a los 8s de intentar conectar, o a los 10s de una consulta
+      // que no responde, directamente falla y el servidor puede avisar el
+      // error en vez de colgarse.
+      connectionTimeoutMillis: 8000,
+      query_timeout: 10000,
+    });
+    // Si una conexión que estaba "en reposo" en el pool se corta sola (pasa
+    // de vez en cuando con bases gratuitas), node-postgres tira un evento de
+    // error; sin este listener, eso puede tirar abajo todo el servidor.
+    pool.on('error', (err) => {
+      console.error('Error inesperado en el cliente de Postgres (idle):', err.message);
     });
   }
   return pool;
@@ -62,7 +75,9 @@ function getPool() {
 
 async function asegurarTabla() {
   if (!tablaLista) {
-    tablaLista = getPool().query(`
+    tablaLista = getPool()
+      .query(
+        `
       CREATE TABLE IF NOT EXISTS leads (
         id BIGINT PRIMARY KEY,
         creado_en TIMESTAMPTZ NOT NULL,
@@ -77,7 +92,15 @@ async function asegurarTabla() {
         hora TEXT,
         meet_link TEXT
       );
-    `);
+    `
+      )
+      .catch((err) => {
+        // Si falló (por ejemplo, la conexión no respondió a tiempo), no nos
+        // quedamos para siempre con ese error guardado: el próximo contacto
+        // que llegue va a volver a intentar crear la tabla desde cero.
+        tablaLista = null;
+        throw err;
+      });
   }
   return tablaLista;
 }
