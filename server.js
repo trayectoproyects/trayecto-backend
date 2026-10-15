@@ -58,10 +58,9 @@ app.get('/api/leads/stream', (req, res) => {
 });
 
 const SERVICIOS_VALIDOS = [
-  'Pauta publicitaria',
-  'Contenido & redes',
   'Branding & diseño',
-  'Automatización & CRM',
+  'Diseño web',
+  'Contenido & video',
   'Otro',
 ];
 

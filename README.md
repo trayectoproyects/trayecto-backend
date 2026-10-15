@@ -114,7 +114,7 @@ Con el servidor corriendo (`npm start`), en otra terminal probá:
 ```
 curl -X POST http://localhost:3000/api/contacto \
   -H "Content-Type: application/json" \
-  -d '{"nombre":"Prueba","marca":"Mi Negocio","email":"tu-email@gmail.com","servicios":["Contenido & redes"],"comentario":"Esto es una prueba","fecha":"2026-11-01","hora":"15:00"}'
+  -d '{"nombre":"Prueba","marca":"Mi Negocio","email":"tu-email@gmail.com","servicios":["Contenido & video"],"comentario":"Esto es una prueba","fecha":"2026-11-01","hora":"15:00"}'
 ```
 
 Si todo está bien configurado: te debería llegar un email a `NOTIFY_EMAIL`,

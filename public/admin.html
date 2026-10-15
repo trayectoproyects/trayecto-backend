@@ -100,7 +100,8 @@
   .lead-foot{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
   .lead-link{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700;padding:8px 14px;border-radius:999px;text-decoration:none;}
   .lead-link.meet{background:var(--noche);color:#fff;}
-  .lead-link.tel{background:rgba(92,141,104,.14);color:var(--ruta-verde);}
+  .lead-link.wa{background:rgba(92,141,104,.14);color:var(--ruta-verde);}
+  .lead-link.tel{background:var(--line-soft);color:var(--ink-soft);}
   .lead-link.ig{background:var(--naranja-soft);color:var(--naranja-ink);}
   .lead-link.mail{background:var(--line-soft);color:var(--ink-soft);}
   .lead-schedule{font-size:13px;font-weight:700;color:var(--noche);background:rgba(31,58,68,.08);padding:8px 14px;border-radius:999px;display:inline-flex;align-items:center;gap:6px;}
@@ -216,10 +217,32 @@
     statMeet.textContent = leads.filter(l => l.meet_link).length;
   }
 
-  function telUrl(celular){
+  // Normaliza un celular argentino escrito de cualquier forma (con 0 y/o 15 adelante,
+  // con o sin +54, con o sin el 9 de celular) al formato que necesitan tel: y wa.me:
+  // código de área + número, sin ceros ni 15 de más.
+  function normalizarCelularAR(celular){
     if(!celular) return null;
-    const limpio = celular.replace(/[^\d+]/g, '');
-    return limpio ? `tel:${limpio}` : null;
+    let d = celular.replace(/\D/g, '');
+    if(!d) return null;
+    if(d.startsWith('00')) d = d.slice(2);
+    if(d.startsWith('54')) d = d.slice(2);
+    if(d.length > 10 && d.startsWith('9')) d = d.slice(1);
+    if(d.startsWith('0')) d = d.slice(1);
+    const m = d.match(/^(\d{2,4})15(\d{6,8})$/);
+    if(m) d = m[1] + m[2];
+    return d || null;
+  }
+  function telUrl(celular){
+    const d = normalizarCelularAR(celular);
+    return d ? `tel:+549${d}` : null;
+  }
+  function waUrl(celular){
+    const d = normalizarCelularAR(celular);
+    return d ? `https://wa.me/549${d}` : null;
+  }
+  function gmailComposeUrl(email){
+    if(!email) return null;
+    return `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(email)}&su=${encodeURIComponent('Re: tu consulta a Trayecto')}`;
   }
   function instagramUrl(handle){
     if(!handle) return null;
@@ -234,7 +257,9 @@
     const servicios = Array.isArray(lead.servicios) ? lead.servicios : [];
     const fechaPedida = fmtFechaPedida(lead.fecha, lead.hora);
     const telHref = telUrl(lead.celular);
+    const waHref = waUrl(lead.celular);
     const igHref = instagramUrl(lead.instagram);
+    const mailHref = gmailComposeUrl(lead.email);
     return `
       <div class="lead-card${esNuevo ? ' is-new' : ''}" data-id="${lead.id}">
         <div class="lead-head">
@@ -253,9 +278,10 @@
         <div class="lead-foot">
           ${fechaPedida ? `<span class="lead-schedule">🗓️ Pidió llamada: ${escapeHtml(fechaPedida)}</span>` : ''}
           ${lead.meet_link ? `<a class="lead-link meet" href="${escapeHtml(lead.meet_link)}" target="_blank" rel="noopener noreferrer">🎥 Abrir Meet</a>` : ''}
+          ${waHref ? `<a class="lead-link wa" href="${escapeHtml(waHref)}" target="_blank" rel="noopener noreferrer">💬 WhatsApp</a>` : ''}
           ${telHref ? `<a class="lead-link tel" href="${escapeHtml(telHref)}">📱 Llamar</a>` : ''}
           ${igHref ? `<a class="lead-link ig" href="${escapeHtml(igHref)}" target="_blank" rel="noopener noreferrer">📷 Ver Instagram</a>` : ''}
-          ${lead.email ? `<a class="lead-link mail" href="mailto:${escapeHtml(lead.email)}">✉️ Responder por email</a>` : ''}
+          ${mailHref ? `<a class="lead-link mail" href="${escapeHtml(mailHref)}" target="_blank" rel="noopener noreferrer">✉️ Responder por email</a>` : ''}
         </div>
       </div>`;
   }
